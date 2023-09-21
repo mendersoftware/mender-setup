@@ -1,0 +1,16 @@
+stages:
+  - build
+  - test
+  - publish
+
+include:
+  - project: 'Northern.tech/Mender/mendertesting'
+    file:
+      - '.gitlab-ci-github-status-updates.yml'
+      - '.gitlab-ci-check-golang-lint.yml'
+      - '.gitlab-ci-check-golang-unittests.yml'
+      - '.gitlab-ci-check-commits.yml'
+      - '.gitlab-ci-check-license.yml'
+
+# Keep golang version aligned with latest yocto release
+image: golang:1.17-alpine3.16
