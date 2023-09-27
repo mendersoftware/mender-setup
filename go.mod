@@ -1,3 +1,3 @@
 module github.com/mendersoftware/mender-setup
 
-go 1.20
+go 1.17
