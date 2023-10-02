@@ -9,8 +9,8 @@ Mender is an open source over-the-air (OTA) software updater for embedded Linux
 devices. Mender comprises a client running at the embedded device, as well as
 a server that manages deployments across many devices.
 
-This repository contains the `mender-setup` tool to configure the Mender client. It writes the
-configuration in the Mender client configuration file `/etc/mender/mender.conf`.
+This repository contains the `mender-setup` tool to configure the Mender Client. It writes the
+configuration in the Mender Client configuration file `/etc/mender/mender.conf`.
 
 It guides the user through an interactive wizard to define the required fields for the configuration
 file. All fields can also be specified with command lines options. See `mender-setup --help` for
