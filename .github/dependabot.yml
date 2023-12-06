@@ -6,3 +6,7 @@ updates:
     package-ecosystem: gomod
     schedule:
       interval: weekly
+    groups:
+      golang-dependencies:
+        patterns:
+          - "*"
