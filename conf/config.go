@@ -17,18 +17,34 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
-	"strings"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/mendersoftware/mender/dbus"
+	"github.com/mendersoftware/mender-setup/dbus"
 )
 
 const (
 	DefaultUpdateControlMapBootExpirationTimeSeconds = 600
-	Pkcs11URIPrefix                                  = "pkcs11:"
 )
+
+// MenderServer is a placeholder for a full server definition used when
+// multiple servers are given. The fields corresponds to the definitions
+// given in MenderConfig.
+type MenderServer struct {
+	ServerURL string
+	// TODO: Move all possible server specific configurations in
+	//       MenderConfig over to this struct. (e.g. TenantToken?)
+}
+
+type Security struct {
+	AuthPrivateKey string `json:",omitempty"`
+	SSLEngine      string `json:",omitempty"`
+}
+
+type DBusConfig struct {
+	Enabled bool
+}
 
 type MenderConfigFromFile struct {
 	// Path to the public key used to verify signed updates.
@@ -104,31 +120,6 @@ type MenderConfigFromFile struct {
 	DaemonLogLevel string `json:",omitempty"`
 }
 
-type MenderConfig struct {
-	MenderConfigFromFile
-
-	// Additional fields that are in our config struct for convenience, but
-	// not actually configurable via the config file.
-	ModulesPath     string
-	ModulesWorkPath string
-
-	ArtifactScriptsPath string
-	RootfsScriptsPath   string
-
-	BootstrapArtifactFile string
-}
-
-type DBusConfig struct {
-	Enabled bool
-}
-
-type DualRootfsDeviceConfig struct {
-	RootfsPartA string
-	RootfsPartB string
-}
-
-// Client configuration
-
 // HttpsClient holds the configuration for the client side mTLS configuration
 // NOTE: Careful when changing this, the struct is exposed directly in the
 // 'mender.conf' file.
@@ -136,16 +127,6 @@ type HttpsClient struct {
 	Certificate string `json:",omitempty"`
 	Key         string `json:",omitempty"`
 	SSLEngine   string `json:",omitempty"`
-}
-
-// Security structure holds the configuration for the client
-// Added for MEN-3924 in order to provide a way to specify PKI params
-// outside HttpsClient.
-// NOTE: Careful when changing this, the struct is exposed directly in the
-// 'mender.conf' file.
-type Security struct {
-	AuthPrivateKey string `json:",omitempty"`
-	SSLEngine      string `json:",omitempty"`
 }
 
 // Connectivity instructs the client how we want to treat the keep alive connections
@@ -161,44 +142,25 @@ type Connectivity struct {
 	IdleConnTimeoutSeconds int `json:",omitempty"`
 }
 
-func (h *HttpsClient) Validate() {
-	if h == nil {
-		return
-	}
-	if h.Certificate != "" || h.Key != "" {
-		if h.Certificate == "" {
-			log.Error(
-				"The 'Key' field is set in the mTLS configuration, but no 'Certificate' is given." +
-					" Both need to be present in order for mTLS to function",
-			)
-		}
-		if h.Key == "" {
-			log.Error(
-				"The 'Certificate' field is set in the mTLS configuration, but no 'Key' is given." +
-					" Both need to be present in order for mTLS to function",
-			)
-		} else if strings.HasPrefix(h.Key, Pkcs11URIPrefix) && len(h.SSLEngine) == 0 {
-			log.Errorf("The 'Key' field is set to be loaded from %s, but no 'SSLEngine' is given."+
-				" Both need to be present in order for loading of the key to function",
-				Pkcs11URIPrefix)
-		}
-	}
-}
-
-// MenderServer is a placeholder for a full server definition used when
-// multiple servers are given. The fields corresponds to the definitions
-// given in MenderConfig.
-type MenderServer struct {
-	ServerURL string
-	// TODO: Move all possible server specific configurations in
-	//       MenderConfig over to this struct. (e.g. TenantToken?)
-}
-
 type HttpConfig struct {
 	ServerCert string
 	*HttpsClient
 	*Connectivity
 	NoVerify bool
+}
+
+type MenderConfig struct {
+	MenderConfigFromFile
+
+	// Additional fields that are in our config struct for convenience, but
+	// not actually configurable via the config file.
+	ModulesPath     string
+	ModulesWorkPath string
+
+	ArtifactScriptsPath string
+	RootfsScriptsPath   string
+
+	BootstrapArtifactFile string
 }
 
 func NewMenderConfig() *MenderConfig {
@@ -212,10 +174,6 @@ func NewMenderConfig() *MenderConfig {
 	}
 }
 
-// LoadConfig parses the mender configuration json-files
-// (/etc/mender/mender.conf and /var/lib/mender/mender.conf) and loads the
-// values into the MenderConfig structure defining high level client
-// configurations.
 func LoadConfig(mainConfigFile string, fallbackConfigFile string) (*MenderConfig, error) {
 	// Load fallback configuration first, then main configuration.
 	// It is OK if either file does not exist, so long as the other one does exist.
@@ -252,75 +210,6 @@ func LoadConfig(mainConfigFile string, fallbackConfigFile string) (*MenderConfig
 	log.Debugf("Loaded configuration = %#v", config)
 
 	return config, nil
-}
-
-// Validate verifies the Servers fields in the configuration
-func (c *MenderConfig) Validate() error {
-	if c.Servers == nil {
-		if c.ServerURL == "" {
-			log.Warn("No server URL(s) specified in mender configuration.")
-		}
-		c.Servers = make([]MenderServer, 1)
-		c.Servers[0].ServerURL = c.ServerURL
-	} else if c.ServerURL != "" {
-		log.Error("In mender.conf: don't specify both Servers field " +
-			"AND the corresponding fields in base structure (i.e. " +
-			"ServerURL). The first server on the list overwrites" +
-			"these fields.")
-		return errors.New("Both Servers AND ServerURL given in " +
-			"mender.conf")
-	}
-	for i := 0; i < len(c.Servers); i++ {
-		// Trim possible '/' suffix, which is added back in URL path
-		c.Servers[i].ServerURL = strings.TrimSuffix(c.Servers[i].ServerURL, "/")
-		if c.Servers[i].ServerURL == "" {
-			log.Warnf("Server entry %d has no associated server URL.", i+1)
-		}
-	}
-
-	c.HttpsClient.Validate()
-
-	if c.HttpsClient.Key != "" && c.Security.AuthPrivateKey != "" {
-		log.Warn("both config.HttpsClient.Key and config.Security.AuthPrivateKey" +
-			" specified; config.Security.AuthPrivateKey will take precedence over" +
-			" the former for the signing of auth requests.")
-	}
-
-	log.Debugf("Verified configuration = %#v", c)
-
-	return nil
-}
-
-func (c *MenderConfigFromFile) GetUpdateControlMapExpirationTimeSeconds() int {
-	if c.UpdateControlMapExpirationTimeSeconds == 0 {
-		return 2 * c.UpdatePollIntervalSeconds
-	}
-	return c.UpdateControlMapExpirationTimeSeconds
-}
-
-func (c *MenderConfigFromFile) GetUpdateControlMapBootExpirationTimeSeconds() int {
-	if c.UpdateControlMapBootExpirationTimeSeconds == 0 {
-		return DefaultUpdateControlMapBootExpirationTimeSeconds
-	}
-	return c.UpdateControlMapBootExpirationTimeSeconds
-}
-
-func checkConfigDefaults(config *MenderConfig) {
-	if config.MenderConfigFromFile.UpdateControlMapExpirationTimeSeconds == 0 {
-		log.Info(
-			"'UpdateControlMapExpirationTimeSeconds' is not set " +
-				"in the Mender configuration file." +
-				" Falling back to the default of 2*UpdatePollIntervalSeconds")
-	}
-
-	if config.MenderConfigFromFile.UpdateControlMapBootExpirationTimeSeconds == 0 {
-		log.Infof(
-			"'UpdateControlMapBootExpirationTimeSeconds' is not set "+
-				"in the Mender configuration file."+
-				" Falling back to the default of %d seconds",
-			DefaultUpdateControlMapBootExpirationTimeSeconds,
-		)
-	}
 }
 
 func loadConfigFile(configFile string, config *MenderConfig, filesLoadedCount *int) error {
@@ -371,6 +260,24 @@ func readConfigFile(config interface{}, fileName string) error {
 	return nil
 }
 
+func checkConfigDefaults(config *MenderConfig) {
+	if config.MenderConfigFromFile.UpdateControlMapExpirationTimeSeconds == 0 {
+		log.Info(
+			"'UpdateControlMapExpirationTimeSeconds' is not set " +
+				"in the Mender configuration file." +
+				" Falling back to the default of 2*UpdatePollIntervalSeconds")
+	}
+
+	if config.MenderConfigFromFile.UpdateControlMapBootExpirationTimeSeconds == 0 {
+		log.Infof(
+			"'UpdateControlMapBootExpirationTimeSeconds' is not set "+
+				"in the Mender configuration file."+
+				" Falling back to the default of %d seconds",
+			DefaultUpdateControlMapBootExpirationTimeSeconds,
+		)
+	}
+}
+
 func SaveConfigFile(config *MenderConfigFromFile, filename string) error {
 	configJson, err := json.MarshalIndent(config, "", "    ")
 	if err != nil {
@@ -390,67 +297,4 @@ func SaveConfigFile(config *MenderConfigFromFile, filename string) error {
 		return errors.Wrap(err, "Error writing to configuration file")
 	}
 	return nil
-}
-
-func maybeHTTPSClient(c *MenderConfig) *HttpsClient {
-	if c.HttpsClient.Certificate != "" && c.HttpsClient.Key != "" {
-		return &c.HttpsClient
-	}
-	c.HttpsClient.Validate()
-	return nil
-}
-
-func (c *MenderConfig) GetHttpConfig() HttpConfig {
-	return HttpConfig{
-		ServerCert: c.ServerCertificate,
-		// The HttpsClient config is only loaded when both a cert and
-		// key is given
-		HttpsClient:  maybeHTTPSClient(c),
-		NoVerify:     c.SkipVerify,
-		Connectivity: &c.Connectivity,
-	}
-}
-
-func (c *MenderConfig) GetDeviceConfig() DualRootfsDeviceConfig {
-	return DualRootfsDeviceConfig{
-		RootfsPartA: c.RootfsPartA,
-		RootfsPartB: c.RootfsPartB,
-	}
-}
-
-func (c *MenderConfig) GetDeploymentLogLocation() string {
-	return c.UpdateLogPath
-}
-
-// GetTenantToken returns a default tenant-token if
-// no custom token is set in local.conf
-func (c *MenderConfig) GetTenantToken() []byte {
-	return []byte(c.TenantToken)
-}
-
-type VerificationKey struct {
-	Path string
-	Data []byte
-}
-
-// GetVerificationKeys reads all verification keys.
-func (c *MenderConfig) GetVerificationKeys() []*VerificationKey {
-	if len(c.ArtifactVerifyKeys) == 0 {
-		return nil
-	}
-
-	var out []*VerificationKey
-	for _, keyPath := range c.ArtifactVerifyKeys {
-		key, err := ioutil.ReadFile(keyPath)
-		if err != nil {
-			log.Infof("config: error reading artifact verify key from %v", keyPath)
-			continue
-		}
-		out = append(out, &VerificationKey{
-			Path: keyPath,
-			Data: key,
-		})
-	}
-
-	return out
 }
