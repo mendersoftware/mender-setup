@@ -33,7 +33,7 @@ import (
 	"github.com/urfave/cli/v2"
 	terminal "golang.org/x/term"
 
-	"github.com/mendersoftware/mender/conf"
+	"github.com/mendersoftware/mender-setup/conf"
 )
 
 type setupOptionsType struct {

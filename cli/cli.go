@@ -31,7 +31,7 @@ import (
 
 	setup_conf "github.com/mendersoftware/mender-setup/conf"
 
-	"github.com/mendersoftware/mender/conf"
+	"github.com/mendersoftware/mender-setup/conf"
 )
 
 const (

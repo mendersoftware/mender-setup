@@ -3,7 +3,6 @@ module github.com/mendersoftware/mender-setup
 go 1.17
 
 require (
-	github.com/mendersoftware/mender v0.0.0-20230928115926-719cc9990b5b
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
