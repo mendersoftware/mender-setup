@@ -20,8 +20,6 @@ import (
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/mendersoftware/mender-setup/dbus"
 )
 
 const (
@@ -40,10 +38,6 @@ type MenderServer struct {
 type Security struct {
 	AuthPrivateKey string `json:",omitempty"`
 	SSLEngine      string `json:",omitempty"`
-}
-
-type DBusConfig struct {
-	Enabled bool
 }
 
 type MenderConfigFromFile struct {
@@ -74,8 +68,7 @@ type MenderConfigFromFile struct {
 
 	// Path to the device type file
 	DeviceTypeFile string `json:",omitempty"`
-	// DBus configuration
-	DBus DBusConfig `json:",omitempty"`
+
 	// Expiration timeout for the control map
 	UpdateControlMapExpirationTimeSeconds int `json:",omitempty"`
 	// Expiration timeout for the control map when just booted
@@ -183,12 +176,6 @@ func LoadConfig(mainConfigFile string, fallbackConfigFile string) (*MenderConfig
 
 	var filesLoadedCount int
 	config := NewMenderConfig()
-
-	// If DBus is compiled in, enable it by default
-	_, err := dbus.GetDBusAPI()
-	if err == nil {
-		config.DBus.Enabled = true
-	}
 
 	if loadErr := loadConfigFile(fallbackConfigFile, config, &filesLoadedCount); loadErr != nil {
 		return nil, loadErr
