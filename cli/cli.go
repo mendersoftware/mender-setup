@@ -187,7 +187,7 @@ func (runOptions *runOptionsType) commonCLIHandler(
 		return nil, err
 	}
 
-	// Make sure that paths that are not configurable via the config file is conconsistent with
+	// Make sure that paths that are not configurable via the config file is consistent with
 	// --data flag
 	config.ArtifactScriptsPath = path.Join(runOptions.dataStore, "scripts")
 	config.ModulesWorkPath = path.Join(runOptions.dataStore, "modules", "v3")
