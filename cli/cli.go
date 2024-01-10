@@ -178,8 +178,6 @@ func SetupCLI(args []string) error {
 func (runOptions *runOptionsType) commonCLIHandler(
 	ctx *cli.Context) (*conf.MenderConfig, error) {
 
-	fmt.Println("runOptions datastore: ", runOptions.dataStore)
-
 	// Handle config flags
 	config, err := conf.LoadConfig(
 		runOptions.config, runOptions.fallbackConfig)
@@ -187,7 +185,7 @@ func (runOptions *runOptionsType) commonCLIHandler(
 		return nil, err
 	}
 
-	// Make sure that paths that are not configurable via the config file is conconsistent with
+	// Make sure that paths that are not configurable via the config file is consistent with
 	// --data flag
 	config.ArtifactScriptsPath = path.Join(runOptions.dataStore, "scripts")
 	config.ModulesWorkPath = path.Join(runOptions.dataStore, "modules", "v3")
@@ -223,13 +221,9 @@ func (runOptions *runOptionsType) handleCLIOptions(ctx *cli.Context) error {
 	// Check that user has permission to directories so that
 	// the user doesn't have to perform the setup before raising
 	// an error.
-	fmt.Println("runOptions config: ", runOptions.config)
-	fmt.Println("runOptions config: ", path.Dir(runOptions.config))
 	if err = checkWritePermissions(path.Dir(runOptions.config)); err != nil {
 		return err
 	}
-	fmt.Println("runOptions config datastore: ", runOptions.dataStore)
-	fmt.Println("runOptions config datastore: ", path.Dir(runOptions.dataStore))
 	if err = checkWritePermissions(runOptions.dataStore); err != nil {
 		return err
 	}
@@ -336,7 +330,6 @@ func upgradeHelpPrinter(defaultPrinter func(w io.Writer, templ string, data inte
 }
 
 func checkWritePermissions(dir string) error {
-	fmt.Println("Checking the permissions for: ", dir)
 	_, err := os.Stat(dir)
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(dir, 0755)
