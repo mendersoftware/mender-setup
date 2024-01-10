@@ -70,7 +70,7 @@ const ( // state enum
 
 var (
 	// needed so that we can override it when testing
-	DefaultMenderDemoCertDir      = "/usr/share/doc/mender-client/examples"
+	DefaultMenderDemoCertDir      = "/usr/share/doc/mender-auth/examples"
 	DefaultLocalTrustMenderDir    = "/usr/local/share/ca-certificates/mender"
 	DefaultLocalTrustMenderPrefix = "mender-demo-"
 	DefaultLocalTrustMenderFormat = "mender-demo-%d.crt"
