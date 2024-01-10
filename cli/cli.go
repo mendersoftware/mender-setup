@@ -53,6 +53,7 @@ type runOptionsType struct {
 	dataStore      string
 	conf.HttpConfig
 	setupOptions setupOptionsType // Options for setup subcommand
+	logOptions   logOptionsType   // Options for logging
 }
 
 func ShowVersion() string {
@@ -165,6 +166,13 @@ func SetupCLI(args []string) error {
 				Name:  "quiet",
 				Usage: "Suppress informative prompts.",
 			},
+			&cli.StringFlag{
+				Name:        "log-level",
+				Aliases:     []string{"l"},
+				Usage:       "Set logging `level`.",
+				Value:       "warning",
+				Destination: &runOptions.logOptions.logLevel,
+			},
 		},
 	}
 
@@ -177,6 +185,8 @@ func SetupCLI(args []string) error {
 
 func (runOptions *runOptionsType) commonCLIHandler(
 	ctx *cli.Context) (*conf.MenderConfig, error) {
+
+	log.Debug("commonCLIHandler config file: ", runOptions.config)
 
 	// Handle config flags
 	config, err := conf.LoadConfig(
@@ -221,9 +231,11 @@ func (runOptions *runOptionsType) handleCLIOptions(ctx *cli.Context) error {
 	// Check that user has permission to directories so that
 	// the user doesn't have to perform the setup before raising
 	// an error.
+	log.Debug("handleCLIOptions config file: ", runOptions.config)
 	if err = checkWritePermissions(path.Dir(runOptions.config)); err != nil {
 		return err
 	}
+	log.Debug("handleCLIOptions dataStore file: ", runOptions.dataStore)
 	if err = checkWritePermissions(runOptions.dataStore); err != nil {
 		return err
 	}
@@ -245,9 +257,18 @@ func (runOptions *runOptionsType) setupCLIHandler(ctx *cli.Context) error {
 			errMsgAmbiguousArgumentsGivenF,
 			ctx.Args().First())
 	}
-	if !ctx.IsSet("log-level") {
-		log.SetLevel(log.WarnLevel)
+
+	if ctx.Bool("quiet") {
+		log.SetLevel(log.ErrorLevel)
+	} else {
+		if lvl, err := log.ParseLevel(ctx.String("log-level")); err == nil {
+			log.SetLevel(lvl)
+		} else {
+			log.Warnf(
+				"Failed to parse set log level '%s'.", ctx.String("log-level"))
+		}
 	}
+
 	if err := runOptions.setupOptions.handleImplicitFlags(ctx); err != nil {
 		return err
 	}
@@ -330,6 +351,7 @@ func upgradeHelpPrinter(defaultPrinter func(w io.Writer, templ string, data inte
 }
 
 func checkWritePermissions(dir string) error {
+	log.Debug("Checking the permissions for: ", dir)
 	_, err := os.Stat(dir)
 	if os.IsNotExist(err) {
 		err := os.MkdirAll(dir, 0755)
