@@ -54,6 +54,10 @@ type setupOptionsType struct {
 	demoIntervals      bool
 }
 
+type logOptionsType struct {
+	logLevel string
+}
+
 // ------------------------------ Setup constants ------------------------------
 const ( // state enum
 	stateDeviceType = iota
