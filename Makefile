@@ -14,6 +14,8 @@ VERSION = $(shell git describe --tags --dirty --exact-match 2>/dev/null || git r
 GO_LDFLAGS = \
 	-ldflags "-X github.com/mendersoftware/mender-setup/conf.Version=$(VERSION)"
 
+GO_BUILDFLAGS = -trimpath
+
 ifeq ($(V),1)
 BUILDV = -v
 endif
@@ -29,7 +31,7 @@ clean:
 	@$(GO) clean
 
 mender-setup: $(PKGFILES)
-	@$(GO) build $(GO_LDFLAGS) $(BUILDV) $(BUILDTAGS)
+	@$(GO) build $(GO_LDFLAGS) $(BUILDV) $(BUILDTAGS) $(GO_BUILDFLAGS)
 
 install: install-bin
 
