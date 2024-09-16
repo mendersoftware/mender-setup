@@ -5,7 +5,9 @@ updates:
     directory: /
     package-ecosystem: gomod
     schedule:
-      interval: weekly
+      interval: monthly
+    reviewers:
+      - "mendersoftware/client-dependabot-reviewers"
     groups:
       golang-dependencies:
         patterns:
