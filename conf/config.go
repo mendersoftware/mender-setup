@@ -15,7 +15,6 @@ package conf
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 
 	"github.com/pkg/errors"
@@ -231,7 +230,7 @@ func readConfigFile(config interface{}, fileName string) error {
 	// Reads mender configuration (JSON) file.
 
 	log.Debug("Reading Mender configuration from file " + fileName)
-	conf, err := ioutil.ReadFile(fileName)
+	conf, err := os.ReadFile(fileName)
 	if err != nil {
 		return err
 	}
