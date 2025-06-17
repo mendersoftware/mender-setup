@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -243,7 +242,7 @@ func getDefaultDeviceType(ctx *cli.Context) (devType string) {
 	devType, err := GetDeviceType(path.
 		Join(ctx.String("data"), "device_type"))
 	if err != nil {
-		hostName, err := ioutil.ReadFile("/etc/hostname")
+		hostName, err := os.ReadFile("/etc/hostname")
 		if err != nil {
 			return "unknown"
 		}
@@ -600,7 +599,7 @@ func (opts *setupOptionsType) getTenantToken(
 		return errors.Wrap(err,
 			"Tenant token request FAILED.")
 	}
-	data, err := ioutil.ReadAll(rsp.Body)
+	data, err := io.ReadAll(rsp.Body)
 	if err != nil {
 		return errors.Wrap(err,
 			"Reading tenant token FAILED.")
@@ -671,7 +670,7 @@ func (opts *setupOptionsType) tryLoginhostedMender(
 	}
 
 	// Get tenant token
-	userToken, err := ioutil.ReadAll(response.Body)
+	userToken, err := io.ReadAll(response.Body)
 	if err != nil {
 		return errors.Wrap(err,
 			"Error reading authorization token")
@@ -932,7 +931,7 @@ func (opts *setupOptionsType) saveConfigOptions(
 	if err := conf.SaveConfigFile(config, opts.configPath); err != nil {
 		return err
 	}
-	err := ioutil.WriteFile(config.DeviceTypeFile,
+	err := os.WriteFile(config.DeviceTypeFile,
 		[]byte("device_type="+opts.deviceType+"\n"), 0644)
 	if err != nil {
 		return errors.Wrap(err, "Error writing to devicefile.")

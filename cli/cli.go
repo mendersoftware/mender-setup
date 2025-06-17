@@ -17,7 +17,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"runtime"
@@ -365,7 +364,7 @@ func checkWritePermissions(dir string) error {
 	} else if err != nil {
 		return errors.Errorf("Error trying to stat directory %q", dir)
 	}
-	f, err := ioutil.TempFile(dir, "temporaryFile")
+	f, err := os.MkdirTemp(dir, "temporaryFile")
 	if os.IsPermission(err) {
 		return errors.Wrapf(err, "User does not have "+
 			"permission to write to data store "+
@@ -375,6 +374,6 @@ func checkWritePermissions(dir string) error {
 			"Error checking write permissions to "+
 				"directory %q", dir)
 	}
-	os.Remove(f.Name())
+	os.Remove(f)
 	return nil
 }

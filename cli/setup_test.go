@@ -16,7 +16,6 @@ package cli
 import (
 	"encoding/json"
 	"flag"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -56,7 +55,7 @@ func initCLITest(t *testing.T, flagSet *flag.FlagSet) (*cli.Context,
 	*conf.MenderConfigFromFile, *runOptionsType) {
 	ctx := cli.NewContext(&cli.App{}, flagSet, nil)
 	ctx.Set("quiet", "true")
-	tmpDir, err := ioutil.TempDir("", "tmpConf")
+	tmpDir, err := os.MkdirTemp("", "tmpConf")
 	assert.NoError(t, err)
 	confPath := path.Join(tmpDir, "mender.conf")
 	config, err := conf.LoadConfig(confPath, "")
@@ -136,7 +135,7 @@ func TestSetupInteractiveMode(t *testing.T) {
 	assert.Equal(t,
 		config.Servers[0].ServerURL,
 		"https://hosted.mender.io")
-	dev, err := ioutil.ReadFile(config.DeviceTypeFile)
+	dev, err := os.ReadFile(config.DeviceTypeFile)
 	assert.NoError(t, err)
 	assert.Equal(t, string(dev), "device_type=raspberrypi3\n")
 	assert.Equal(t, "dummy-token", config.TenantToken)
@@ -163,7 +162,7 @@ func TestSetupInteractiveMode(t *testing.T) {
 		defaultInventoryPoll, config.InventoryPollIntervalSeconds)
 	assert.Equal(t,
 		defaultRetryPoll, config.RetryPollIntervalSeconds)
-	dev, err = ioutil.ReadFile(config.DeviceTypeFile)
+	dev, err = os.ReadFile(config.DeviceTypeFile)
 	assert.NoError(t, err)
 	assert.Equal(t, string(dev), "device_type=beagle-pi\n")
 	assert.Equal(t, "", config.ServerCertificate)
@@ -183,7 +182,7 @@ func TestSetupInteractiveMode(t *testing.T) {
 	assert.Equal(t, demoUpdatePoll, config.UpdatePollIntervalSeconds)
 	assert.Equal(t, demoInventoryPoll, config.InventoryPollIntervalSeconds)
 	assert.Equal(t, demoRetryPoll, config.RetryPollIntervalSeconds)
-	dev, err = ioutil.ReadFile(config.DeviceTypeFile)
+	dev, err = os.ReadFile(config.DeviceTypeFile)
 	assert.NoError(t, err)
 	assert.Equal(t, string(dev), "device_type=eagle-pie\n")
 	assert.Equal(t, "", config.ServerCertificate)
@@ -208,7 +207,7 @@ func TestSetupFlags(t *testing.T) {
 	err := doSetup(ctx, config, opts)
 	assert.NoError(t, err)
 	assert.Equal(t, "dummy-token", config.TenantToken)
-	dev, err := ioutil.ReadFile(config.DeviceTypeFile)
+	dev, err := os.ReadFile(config.DeviceTypeFile)
 	assert.NoError(t, err)
 	assert.Equal(t, "device_type=acme-pi\n", string(dev))
 	assert.Equal(t, "https://hosted.mender.io", config.Servers[0].ServerURL)
@@ -224,7 +223,7 @@ func TestSetupFlags(t *testing.T) {
 	opts.serverIP = "1.2.3.4"
 	err = doSetup(ctx, config, opts)
 	assert.NoError(t, err)
-	dev, err = ioutil.ReadFile(config.DeviceTypeFile)
+	dev, err = os.ReadFile(config.DeviceTypeFile)
 	assert.NoError(t, err)
 	assert.Equal(t, "device_type=bagel-bone\n", string(dev))
 	assert.Equal(t, "https://docker.mender.io", config.Servers[0].ServerURL)
@@ -257,7 +256,7 @@ func TestSetupFlags(t *testing.T) {
 	opts.serverURL = "https://docker.menderine.io"
 	err = doSetup(ctx, config, opts)
 	assert.NoError(t, err)
-	dev, err = ioutil.ReadFile(config.DeviceTypeFile)
+	dev, err = os.ReadFile(config.DeviceTypeFile)
 	assert.NoError(t, err)
 	assert.Equal(t, "device_type=bgl-bn\n", string(dev))
 	assert.Equal(t, 123, config.UpdatePollIntervalSeconds)
@@ -302,7 +301,7 @@ func TestSetupFlags(t *testing.T) {
 	opts.serverURL = "https://production.menderine.io"
 	err = doSetup(ctx, config, opts)
 	assert.NoError(t, err)
-	dev, err = ioutil.ReadFile(config.DeviceTypeFile)
+	dev, err = os.ReadFile(config.DeviceTypeFile)
 	assert.NoError(t, err)
 	assert.Equal(t, "device_type=demo-device\n", string(dev))
 	assert.Equal(t, demoUpdatePoll, config.UpdatePollIntervalSeconds)
@@ -320,7 +319,7 @@ func TestInstallDemoCertificateLocalTrust(t *testing.T) {
 	// This test verifies only that the certificate is copied into
 	// the local trust.
 
-	tdir, err := ioutil.TempDir("", "mendertest")
+	tdir, err := os.MkdirTemp("", "mendertest")
 	assert.NoError(t, err)
 	err = os.MkdirAll(tdir, 0755)
 	assert.NoError(t, err)
@@ -361,10 +360,10 @@ func TestInstallDemoCertificateLocalTrust(t *testing.T) {
 	// Verify that the demo cert was installed in the local trust
 	_, err = os.Stat(DefaultLocalTrustMenderDir)
 	assert.NoError(t, err)
-	crtSource, err := ioutil.ReadFile(getMenderDemoCertPath())
+	crtSource, err := os.ReadFile(getMenderDemoCertPath())
 	assert.NoError(t, err)
 
-	crtInstall, err := ioutil.ReadDir(DefaultLocalTrustMenderDir)
+	crtInstall, err := os.ReadDir(DefaultLocalTrustMenderDir)
 	assert.Equal(t, 3, len(crtInstall))
 	for _, entry := range crtInstall {
 		checkCrtInstall(t, path.Join(DefaultLocalTrustMenderDir, entry.Name()), crtSource)
@@ -373,7 +372,7 @@ func TestInstallDemoCertificateLocalTrust(t *testing.T) {
 
 func checkCrtInstall(t *testing.T, cert string, demoCertContent []byte) {
 	assert.True(t, strings.HasPrefix(path.Base(cert), DefaultLocalTrustMenderPrefix))
-	contentBytes, err := ioutil.ReadFile(cert)
+	contentBytes, err := os.ReadFile(cert)
 	content := string(contentBytes)
 	require.NoError(t, err)
 	assert.Greater(t, len(content), 10)
