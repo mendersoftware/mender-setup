@@ -8,6 +8,6 @@ include:
     file:
       - '.gitlab-ci-github-status-updates.yml'
       - '.gitlab-ci-check-golang-lint.yml'
-      - '.gitlab-ci-check-golang-unittests.yml'
+      - '.gitlab-ci-check-golang-unittests-v2.yml'
       - '.gitlab-ci-check-commits.yml'
       - '.gitlab-ci-check-license.yml'
