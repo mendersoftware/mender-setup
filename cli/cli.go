@@ -60,6 +60,17 @@ func ShowVersion() string {
 		setup_conf.VersionString(), runtime.Version())
 }
 
+// validateStringFlagValue validates that a string flag has a non-empty value
+// that doesn't look like another flag (which would indicate a parsing issue).
+func validateStringFlagValue(flagName string) func(*cli.Context, string) error {
+	return func(ctx *cli.Context, value string) error {
+		if value == "" || strings.HasPrefix(value, "-") {
+			return fmt.Errorf("--%s requires a non-empty value", flagName)
+		}
+		return nil
+	}
+}
+
 func SetupCLI(args []string) error {
 	runOptions := &runOptionsType{}
 
@@ -77,27 +88,32 @@ func SetupCLI(args []string) error {
 				Destination: &runOptions.setupOptions.configPath,
 				Value:       conf.DefaultConfFile,
 				Usage:       "`PATH` to configuration file.",
+				Action:      validateStringFlagValue("config"),
 			},
 			&cli.StringFlag{
 				Name:    "data",
 				Aliases: []string{"d"},
 				Usage:   "Mender state data `DIR`ECTORY path.",
 				Value:   conf.DefaultDataStore,
+				Action:  validateStringFlagValue("data"),
 			},
 			&cli.StringFlag{
 				Name:        "device-type",
 				Destination: &runOptions.setupOptions.deviceType,
 				Usage:       "Name of the device `type`.",
+				Action:      validateStringFlagValue("device-type"),
 			},
 			&cli.StringFlag{
 				Name:        "username",
 				Destination: &runOptions.setupOptions.username,
 				Usage:       "User `E-Mail` at hosted.mender.io.",
+				Action:      validateStringFlagValue("username"),
 			},
 			&cli.StringFlag{
 				Name:        "password",
 				Destination: &runOptions.setupOptions.password,
 				Usage:       "User `PASSWORD` at hosted.mender.io.",
+				Action:      validateStringFlagValue("password"),
 			},
 			&cli.StringFlag{
 				Name:        "server-url",
@@ -105,22 +121,26 @@ func SetupCLI(args []string) error {
 				Destination: &runOptions.setupOptions.serverURL,
 				Usage:       "`URL` to Mender server.",
 				Value:       "https://docker.mender.io",
+				Action:      validateStringFlagValue("server-url"),
 			},
 			&cli.StringFlag{
 				Name:        "server-ip",
 				Destination: &runOptions.setupOptions.serverIP,
 				Usage:       "Server ip address.",
+				Action:      validateStringFlagValue("server-ip"),
 			},
 			&cli.StringFlag{
 				Name:        "server-cert",
 				Aliases:     []string{"E"},
 				Destination: &runOptions.setupOptions.serverCert,
 				Usage:       "`PATH` to trusted server certificates",
+				Action:      validateStringFlagValue("server-cert"),
 			},
 			&cli.StringFlag{
 				Name:        "tenant-token",
 				Destination: &runOptions.setupOptions.tenantToken,
 				Usage:       "Hosted Mender tenant `token`",
+				Action:      validateStringFlagValue("tenant-token"),
 			},
 			&cli.IntFlag{
 				Name:        "inventory-poll",
@@ -171,6 +191,7 @@ func SetupCLI(args []string) error {
 				Usage:       "Set logging `level`.",
 				Value:       "warning",
 				Destination: &runOptions.logOptions.logLevel,
+				Action:      validateStringFlagValue("log-level"),
 			},
 		},
 	}
