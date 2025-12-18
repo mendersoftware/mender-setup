@@ -383,3 +383,47 @@ func checkCrtInstall(t *testing.T, cert string, demoCertContent []byte) {
 	assert.Contains(t, lines[len(lines)-2], "END CERTIFICATE")
 	assert.Equal(t, lines[len(lines)-1], "")
 }
+
+func TestSetupCLIEmptyStringFlags(t *testing.T) {
+	// Test that string flags with empty values or values that look like flags
+	// return an appropriate error instead of causing argument parsing issues.
+	testCases := []struct {
+		name        string
+		args        []string
+		expectedErr string
+	}{
+		{
+			name:        "device-type looks like flag (parsing consumed next arg)",
+			args:        []string{"mender-setup", "--quiet", "--device-type", "--tenant-token", "some-token"},
+			expectedErr: "--device-type requires a non-empty value",
+		},
+		{
+			name:        "device-type with explicit empty value",
+			args:        []string{"mender-setup", "--quiet", "--device-type="},
+			expectedErr: "--device-type requires a non-empty value",
+		},
+		{
+			name:        "tenant-token looks like flag",
+			args:        []string{"mender-setup", "--quiet", "--tenant-token", "--server-url", "https://example.com"},
+			expectedErr: "--tenant-token requires a non-empty value",
+		},
+		{
+			name:        "server-url with explicit empty value",
+			args:        []string{"mender-setup", "--quiet", "--server-url="},
+			expectedErr: "--server-url requires a non-empty value",
+		},
+		{
+			name:        "server-cert looks like flag",
+			args:        []string{"mender-setup", "--quiet", "--server-cert", "--device-type", "my-device"},
+			expectedErr: "--server-cert requires a non-empty value",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := SetupCLI(tc.args)
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), tc.expectedErr)
+		})
+	}
+}
