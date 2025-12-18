@@ -8,7 +8,7 @@ include:
     file:
       - '.gitlab-ci-github-status-updates.yml'
       - '.gitlab-ci-check-golang-lint.yml'
-      - '.gitlab-ci-check-golang-unittests-v2.yml'
+      - '.gitlab-ci-check-golang-unittests.yml'
       - '.gitlab-ci-check-license.yml'
   - component: gitlab.com/Northern.tech/Mender/mendertesting/commit-lint@master
 
@@ -28,3 +28,6 @@ include:
   - component: gitlab.com/Northern.tech/Mender/mendertesting/release-docs-changelog@master
     inputs:
       remote_changelog_file: "23.mender-setup/docs.md"
+
+test:unit:
+  image: golang:1.24
