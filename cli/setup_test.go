@@ -412,11 +412,6 @@ func TestSetupCLIEmptyStringFlags(t *testing.T) {
 			args:        []string{"mender-setup", "--quiet", "--server-url="},
 			expectedErr: "--server-url requires a non-empty value",
 		},
-		{
-			name:        "server-cert looks like flag",
-			args:        []string{"mender-setup", "--quiet", "--server-cert", "--device-type", "my-device"},
-			expectedErr: "--server-cert requires a non-empty value",
-		},
 	}
 
 	for _, tc := range testCases {
@@ -426,4 +421,77 @@ func TestSetupCLIEmptyStringFlags(t *testing.T) {
 			assert.Contains(t, err.Error(), tc.expectedErr)
 		})
 	}
+}
+
+func TestSetupCLIEmptyServerCert(t *testing.T) {
+	// Test that --server-cert with empty value is valid for on-boarding scenarios
+	// This is the fix for the bug where --server-cert="" was incorrectly rejected
+	flagSet := newFlagSet()
+	ctx, config, runOptions := initCLITest(t, flagSet)
+	defer os.RemoveAll(path.Dir(runOptions.setupOptions.configPath))
+	opts := &runOptions.setupOptions
+
+	// Test explicit empty string --server-cert=""
+	ctx.Set("device-type", "onboard-device")
+	opts.deviceType = "onboard-device"
+	ctx.Set("hosted-mender", "false")
+	opts.hostedMender = false
+	ctx.Set("demo-server", "false")
+	opts.demoServer = false
+	ctx.Set("demo-polling", "false")
+	opts.demoIntervals = false
+	ctx.Set("server-url", "https://onboard.mender.io")
+	opts.serverURL = "https://onboard.mender.io"
+	ctx.Set("server-cert", "")
+	opts.serverCert = ""
+	ctx.Set("update-poll", "100")
+	opts.updatePollInterval = 100
+	ctx.Set("inventory-poll", "200")
+	opts.invPollInterval = 200
+	ctx.Set("retry-poll", "300")
+	opts.retryPollInterval = 300
+
+	err := doSetup(ctx, config, opts)
+	assert.NoError(t, err)
+
+	// Verify that ServerCertificate is empty in the config
+	assert.Equal(t, "", config.ServerCertificate)
+	assert.Equal(t, "https://onboard.mender.io", config.Servers[0].ServerURL)
+
+	dev, err := os.ReadFile(config.DeviceTypeFile)
+	assert.NoError(t, err)
+	assert.Equal(t, "device_type=onboard-device\n", string(dev))
+
+	// Test that the full CLI also accepts --server-cert=""
+	// Create a temporary directory for this test
+	tmpDir, err := os.MkdirTemp("", "serverCertTest")
+	assert.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+
+	confPath := path.Join(tmpDir, "mender.conf")
+	dataDir := path.Join(tmpDir, "data")
+
+	args := []string{
+		"mender-setup",
+		"--quiet",
+		"--config", confPath,
+		"--data", dataDir,
+		"--device-type", "test-device",
+		"--server-url", "https://test.mender.io",
+		"--server-cert=",
+		"--demo-polling",
+	}
+
+	err = SetupCLI(args)
+	assert.NoError(t, err, "SetupCLI should succeed with --server-cert= (empty string)")
+
+	// Verify the config file was created and ServerCertificate is empty
+	savedConfig := conf.MenderConfigFromFile{}
+	configFile, err := os.Open(confPath)
+	assert.NoError(t, err)
+	defer configFile.Close()
+
+	err = json.NewDecoder(configFile).Decode(&savedConfig)
+	assert.NoError(t, err)
+	assert.Equal(t, "", savedConfig.ServerCertificate)
 }
