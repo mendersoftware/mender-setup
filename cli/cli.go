@@ -134,7 +134,7 @@ func SetupCLI(args []string) error {
 				Aliases:     []string{"E"},
 				Destination: &runOptions.setupOptions.serverCert,
 				Usage:       "`PATH` to trusted server certificates",
-				Action:      validateStringFlagValue("server-cert"),
+				// No validator - empty string is valid (indicates no custom certificate)
 			},
 			&cli.StringFlag{
 				Name:        "tenant-token",
