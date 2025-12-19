@@ -1,4 +1,29 @@
 ---
+## 1.0.2 - 2025-12-19
+
+
+### Bug fixes
+
+
+- Allow empty string for `--server-cert`
+([MEN-9178](https://northerntech.atlassian.net/browse/MEN-9178)) ([d98e10d](https://github.com/mendersoftware/mender-setup/commit/d98e10d9b1f37172854265c2f647ced52458c6bf))  by @lluiscampos
+
+
+
+
+
+
+  Amends 24a5f0deee8c1f6e2794b6c1436e3a71aab8e74e
+  
+  This flag is optional. An empty value indicates no custom certificate,
+  which is the typical use case for servers that use well known CA for
+  certificate signing (like hosted Mender ;)
+
+
+
+
+
+
 ## 1.0.1 - 2025-12-18
 
 
