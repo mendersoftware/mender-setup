@@ -393,23 +393,18 @@ func TestSetupCLIEmptyStringFlags(t *testing.T) {
 		expectedErr string
 	}{
 		{
-			name:        "device-type looks like flag (parsing consumed next arg)",
-			args:        []string{"mender-setup", "--quiet", "--device-type", "--tenant-token", "some-token"},
-			expectedErr: "--device-type requires a non-empty value",
-		},
-		{
 			name:        "device-type with explicit empty value",
-			args:        []string{"mender-setup", "--quiet", "--device-type="},
+			args:        []string{"mender-setup", "--quiet", "--device-type", "", "--tenant-token", "some-token"},
 			expectedErr: "--device-type requires a non-empty value",
 		},
 		{
-			name:        "tenant-token looks like flag",
-			args:        []string{"mender-setup", "--quiet", "--tenant-token", "--server-url", "https://example.com"},
+			name:        "tenant-token with explicit empty value",
+			args:        []string{"mender-setup", "--quiet", "--device-type", "dummy", "--tenant-token", ""},
 			expectedErr: "--tenant-token requires a non-empty value",
 		},
 		{
 			name:        "server-url with explicit empty value",
-			args:        []string{"mender-setup", "--quiet", "--server-url="},
+			args:        []string{"mender-setup", "--quiet", "--device-type", "dummy", "--tenant-token", "some-token", "--server-url", ""},
 			expectedErr: "--server-url requires a non-empty value",
 		},
 	}

@@ -61,10 +61,9 @@ func ShowVersion() string {
 }
 
 // validateStringFlagValue validates that a string flag has a non-empty value
-// that doesn't look like another flag (which would indicate a parsing issue).
 func validateStringFlagValue(flagName string) func(*cli.Context, string) error {
 	return func(ctx *cli.Context, value string) error {
-		if value == "" || strings.HasPrefix(value, "-") {
+		if value == "" {
 			return fmt.Errorf("--%s requires a non-empty value", flagName)
 		}
 		return nil
