@@ -71,6 +71,18 @@ func validateStringFlagValue(flagName string) func(*cli.Context, string) error {
 	}
 }
 
+// validateNonEmptyValue validates that a string flag has a non-empty value.
+// Unlike validateStringFlagValue, this allows values starting with "-",
+// which is needed for values like tenant tokens or passwords
+func validateNonEmptyValue(flagName string) func(*cli.Context, string) error {
+	return func(ctx *cli.Context, value string) error {
+		if value == "" {
+			return fmt.Errorf("--%s requires a non-empty value", flagName)
+		}
+		return nil
+	}
+}
+
 func SetupCLI(args []string) error {
 	runOptions := &runOptionsType{}
 
@@ -113,7 +125,7 @@ func SetupCLI(args []string) error {
 				Name:        "password",
 				Destination: &runOptions.setupOptions.password,
 				Usage:       "User `PASSWORD` at hosted.mender.io.",
-				Action:      validateStringFlagValue("password"),
+				Action:      validateNonEmptyValue("password"),
 			},
 			&cli.StringFlag{
 				Name:        "server-url",
@@ -140,7 +152,7 @@ func SetupCLI(args []string) error {
 				Name:        "tenant-token",
 				Destination: &runOptions.setupOptions.tenantToken,
 				Usage:       "Hosted Mender tenant `token`",
-				Action:      validateStringFlagValue("tenant-token"),
+				Action:      validateNonEmptyValue("tenant-token"),
 			},
 			&cli.IntFlag{
 				Name:        "inventory-poll",

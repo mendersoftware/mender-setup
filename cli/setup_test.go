@@ -403,14 +403,24 @@ func TestSetupCLIEmptyStringFlags(t *testing.T) {
 			expectedErr: "--device-type requires a non-empty value",
 		},
 		{
-			name:        "tenant-token looks like flag",
+			name:        "tenant-token looks like flag (validateNonEmptyValue allows it, but creates leftover arg)",
 			args:        []string{"mender-setup", "--quiet", "--tenant-token", "--server-url", "https://example.com"},
-			expectedErr: "--tenant-token requires a non-empty value",
+			expectedErr: "Ambiguous arguments given - unrecognized argument: https://example.com",
 		},
 		{
 			name:        "server-url with explicit empty value",
 			args:        []string{"mender-setup", "--quiet", "--server-url="},
 			expectedErr: "--server-url requires a non-empty value",
+		},
+		{
+			name:        "password with explicit empty value",
+			args:        []string{"mender-setup", "--quiet", "--password="},
+			expectedErr: "--password requires a non-empty value",
+		},
+		{
+			name:        "tenant-token with explicit empty value",
+			args:        []string{"mender-setup", "--quiet", "--tenant-token="},
+			expectedErr: "--tenant-token requires a non-empty value",
 		},
 	}
 
