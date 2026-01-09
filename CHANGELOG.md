@@ -1,4 +1,25 @@
 ---
+## 1.0.3 - 2026-01-08
+
+
+### Bug fixes
+
+
+- Allow certain values to start with `-`
+([MEN-9203](https://northerntech.atlassian.net/browse/MEN-9203)) ([b1cb5d6](https://github.com/mendersoftware/mender-setup/commit/b1cb5d6bd12b1662358a15497ead59ac3ef7b7d7))  by @danielskinstad
+
+
+
+
+
+  Fixed an issue where a tenant token or a password starting with
+  `-` would fail with a `--<flag> requires a non-empty value` error.
+
+
+
+
+
+
 ## 1.0.2 - 2025-12-19
 
 
