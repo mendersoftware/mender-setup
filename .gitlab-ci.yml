@@ -36,3 +36,7 @@ include:
   - component: gitlab.com/Northern.tech/Mender/mendertesting/release-docs-changelog@master
     inputs:
       remote_changelog_file: "23.mender-setup/docs.md"
+
+test:unit:
+  variables:
+    GO_VERSION: "1.25"
