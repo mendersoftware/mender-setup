@@ -16,7 +16,7 @@ include:
     file:
       - '.gitlab-ci-github-status-updates.yml'
       - '.gitlab-ci-check-golang-lint.yml'
-      - '.gitlab-ci-check-golang-unittests-v2.yml'
+      - '.gitlab-ci-check-golang-unittests-v3.yml'
       - '.gitlab-ci-check-license.yml'
   - component: gitlab.com/Northern.tech/Mender/mendertesting/commit-lint@master
 
