@@ -36,3 +36,8 @@ include:
   - component: gitlab.com/Northern.tech/Mender/mendertesting/release-docs-changelog@master
     inputs:
       remote_changelog_file: "23.mender-setup/docs.md"
+
+# Run unit tests on the prebuilt base-mender-go-test image (QA-1637).
+test:unit:
+  variables:
+    GO_TEST_IMAGE: "registry.gitlab.com/northern.tech/mender/mender-test-containers/base-mender-go-test:master"
