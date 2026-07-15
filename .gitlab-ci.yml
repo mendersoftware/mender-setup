@@ -1,4 +1,5 @@
 stages:
+  - renovate
   - build
   - test
   - publish
@@ -19,6 +20,9 @@ include:
       - '.gitlab-ci-check-golang-unittests-v2.yml'
       - '.gitlab-ci-check-license.yml'
   - component: gitlab.com/Northern.tech/Mender/mendertesting/commit-lint@master
+  - component: gitlab.com/Northern.tech/Mender/mendertesting/renovate@master
+    inputs:
+      stage: "renovate"
 
 # Release CI/CD components
   - component: gitlab.com/Northern.tech/Mender/mendertesting/release-candidate@master
