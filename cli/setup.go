@@ -73,14 +73,26 @@ const ( // state enum
 
 var (
 	// needed so that we can override it when testing
-	DefaultMenderDemoCertDir      = "/usr/share/doc/mender-auth/examples"
+	DefaultMenderDemoCertDir = "/usr/share/mender-auth/examples"
+	// Legacy: mender-auth pre-5.0.6/5.1.1 ships demo.crt here. Remove when
+	// those releases are EOL.
+	LegacyMenderDemoCertDir       = "/usr/share/doc/mender-auth/examples"
 	DefaultLocalTrustMenderDir    = "/usr/local/share/ca-certificates/mender"
 	DefaultLocalTrustMenderPrefix = "mender-demo-"
 	DefaultLocalTrustMenderFormat = "mender-demo-%d.crt"
 )
 
-func getMenderDemoCertPath() string {
-	return path.Join(DefaultMenderDemoCertDir, "demo.crt")
+func getMenderDemoCertPath() (string, error) {
+	certPath := path.Join(DefaultMenderDemoCertDir, "demo.crt")
+	if _, err := os.Stat(certPath); err == nil {
+		return certPath, nil
+	}
+	legacyPath := path.Join(LegacyMenderDemoCertDir, "demo.crt")
+	if _, err := os.Stat(legacyPath); err == nil {
+		return legacyPath, nil
+	}
+	return certPath, fmt.Errorf("Mender demo certificate not found in %q or %q",
+		DefaultMenderDemoCertDir, LegacyMenderDemoCertDir)
 }
 
 const (
@@ -907,8 +919,15 @@ func (opts *setupOptionsType) saveConfigOptions(
 		config.RetryPollIntervalSeconds = opts.retryPollInterval
 	}
 
+	var demoCertPath string
 	if opts.demoServer && !opts.hostedMender {
-		config.ServerCertificate = getMenderDemoCertPath()
+		certPath, err := getMenderDemoCertPath()
+		if err != nil {
+			log.Warn(err.Error())
+		} else {
+			demoCertPath = certPath
+		}
+		config.ServerCertificate = certPath
 	} else {
 		config.ServerCertificate = opts.serverCert
 	}
@@ -940,8 +959,8 @@ func (opts *setupOptionsType) saveConfigOptions(
 		opts.maybeAddHostLookup()
 	}
 
-	if opts.demoServer && (config.ServerCertificate == getMenderDemoCertPath()) {
-		err = opts.installDemoCertificateLocalTrust()
+	if demoCertPath != "" {
+		err = opts.installDemoCertificateLocalTrust(demoCertPath)
 		if err != nil {
 			log.Warnf("Unable to install Mender demo cert in local trust: %s", err.Error())
 		}
@@ -1002,13 +1021,11 @@ func (opts *setupOptionsType) maybeAddHostLookup() {
 	}
 }
 
-func (opts *setupOptionsType) installDemoCertificateLocalTrust() error {
-	menderDemoCertPath := getMenderDemoCertPath()
-
-	s, err := os.Open(menderDemoCertPath)
+func (opts *setupOptionsType) installDemoCertificateLocalTrust(certPath string) error {
+	s, err := os.Open(certPath)
 	if err != nil {
 		return errors.Wrapf(err,
-			"Cannot open file %q", menderDemoCertPath)
+			"Cannot open file %q", certPath)
 	}
 	defer s.Close()
 
