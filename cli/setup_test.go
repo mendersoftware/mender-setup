@@ -103,7 +103,8 @@ func TestSetupInteractiveMode(t *testing.T) {
 	assert.Equal(t, demoUpdatePoll, config.UpdatePollIntervalSeconds)
 	assert.Equal(t, demoInventoryPoll, config.InventoryPollIntervalSeconds)
 	assert.Equal(t, demoRetryPoll, config.RetryPollIntervalSeconds)
-	assert.Equal(t, getMenderDemoCertPath(), config.ServerCertificate)
+	demoCertPath, _ := getMenderDemoCertPath()
+	assert.Equal(t, demoCertPath, config.ServerCertificate)
 
 	// Hosted mender, demo intervals
 	stdinW.WriteString("banana-pi\n") // Device type?
@@ -313,6 +314,42 @@ func TestSetupFlags(t *testing.T) {
 		config.Servers[0].ServerURL)
 }
 
+func TestGetMenderDemoCertPath(t *testing.T) {
+	newDir := t.TempDir()
+	legacyDir := t.TempDir()
+
+	oldDefaultMenderDemoCertDir := DefaultMenderDemoCertDir
+	oldLegacyMenderDemoCertDir := LegacyMenderDemoCertDir
+	DefaultMenderDemoCertDir = newDir
+	LegacyMenderDemoCertDir = legacyDir
+	defer func() {
+		DefaultMenderDemoCertDir = oldDefaultMenderDemoCertDir
+		LegacyMenderDemoCertDir = oldLegacyMenderDemoCertDir
+	}()
+
+	newCert := path.Join(newDir, "demo.crt")
+	legacyCert := path.Join(legacyDir, "demo.crt")
+
+	// Neither exists: default to the new path, with an error
+	certPath, err := getMenderDemoCertPath()
+	assert.Error(t, err)
+	assert.Equal(t, newCert, certPath)
+
+	// Only the legacy cert exists: fall back to it
+	err = os.WriteFile(legacyCert, []byte("cert"), 0644)
+	assert.NoError(t, err)
+	certPath, err = getMenderDemoCertPath()
+	assert.NoError(t, err)
+	assert.Equal(t, legacyCert, certPath)
+
+	// Both exist: prefer the new path
+	err = os.WriteFile(newCert, []byte("cert"), 0644)
+	assert.NoError(t, err)
+	certPath, err = getMenderDemoCertPath()
+	assert.NoError(t, err)
+	assert.Equal(t, newCert, certPath)
+}
+
 func TestInstallDemoCertificateLocalTrust(t *testing.T) {
 	// NOTE: the actual call to installDemoCertificateLocalTrust will
 	// fail when invoking update-ca-certificates (Permission denied).
@@ -360,7 +397,9 @@ func TestInstallDemoCertificateLocalTrust(t *testing.T) {
 	// Verify that the demo cert was installed in the local trust
 	_, err = os.Stat(DefaultLocalTrustMenderDir)
 	assert.NoError(t, err)
-	crtSource, err := os.ReadFile(getMenderDemoCertPath())
+	demoCertPath, err := getMenderDemoCertPath()
+	assert.NoError(t, err)
+	crtSource, err := os.ReadFile(demoCertPath)
 	assert.NoError(t, err)
 
 	crtInstall, err := os.ReadDir(DefaultLocalTrustMenderDir)
