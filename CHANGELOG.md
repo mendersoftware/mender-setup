@@ -1,4 +1,23 @@
 ---
+## 1.0.4 - 2026-09-01
+
+
+### Bug fixes
+
+- *(deps)* Update module golang.org/x/term to v0.45.0 ([1d505c5](https://github.com/mendersoftware/mender-setup/commit/1d505c5e6c05b2ec0c666765c7be3b7ad4e54b6f)) by @mender-test-bot
+- *(deps)* Update module github.com/urfave/cli/v2 to v3 ([1bec9ee](https://github.com/mendersoftware/mender-setup/commit/1bec9ee6629dacf39be807dfb2c5f2f103183b56)) by @mender-test-bot
+- Update the demo server certificate path to the new mender-auth
+location, keeping a fallback to the old path for already released
+mender-auth versions. ([MEN-9949](https://northerntech.atlassian.net/browse/MEN-9949)) ([eb39151](https://github.com/mendersoftware/mender-setup/commit/eb391515bec5ea461641f95c18dbc0a8ae988893)) by @danielskinstad
+
+---
+### All tickets resolved in this release
+
+| Ticket |
+|---|
+| [MEN-9949](https://northerntech.atlassian.net/browse/MEN-9949) |
+
+
 ## 1.0.3 - 2026-01-08
 
 
