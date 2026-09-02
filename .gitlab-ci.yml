@@ -36,7 +36,7 @@ include:
       compass_component_id: "58e93226-aea7-4c92-b8a9-3c322aa6b907"
   - component: gitlab.com/Northern.tech/Mender/mendertesting/release-oslicenses-golang@master
     inputs:
-      remote_license_file: "302.Release-information/03.Open-source-licenses/23.mender-setup/docs.md"
+      remote_license_file: "302.Release-information/04.Open-source-licenses/23.mender-setup/docs.md"
   - component: gitlab.com/Northern.tech/Mender/mendertesting/release-docs-changelog@master
     inputs:
       remote_changelog_file: "23.mender-setup/docs.md"
