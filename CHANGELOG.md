@@ -1,4 +1,11 @@
 ---
+## 1.0.5 - 2026-09-30
+
+
+### Bug fixes
+
+- *(deps)* Update module github.com/urfave/cli/v2 to v3 ([b07de96](https://github.com/mendersoftware/mender-setup/commit/b07de969fbebc516f1c2214ecfa72da0b352146a)) by @danielskinstad
+
 ## 1.0.4 - 2026-09-01
 
 
