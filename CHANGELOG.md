@@ -1,4 +1,16 @@
 ---
+## 1.0.5 - 2026-10-07
+
+
+### Bug fixes
+
+- *(deps)* Update module github.com/urfave/cli/v2 to v3 ([b07de96](https://github.com/mendersoftware/mender-setup/commit/b07de969fbebc516f1c2214ecfa72da0b352146a)) by @danielskinstad
+- *(deps)* Update golang-dependencies ([0e441ad](https://github.com/mendersoftware/mender-setup/commit/0e441ad1507fb21b8012311e834b3968934c74a0)) by @renovate-ring-mendersoftware[bot]
+  - github.com/sirupsen/logrus v1.9.4 -> v1.10.2
+  - github.com/urfave/cli/v3 v3.13.0 -> v3.14.0
+  - golang.org/x/term v0.45.0 -> v0.46.0
+
+
 ## 1.0.4 - 2026-09-01
 
 
