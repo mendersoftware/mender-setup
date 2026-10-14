@@ -7,7 +7,7 @@ require (
 	github.com/sirupsen/logrus v1.10.2
 	github.com/stretchr/testify v1.12.1
 	github.com/urfave/cli/v2 v2.27.7
-	golang.org/x/term v0.46.0
+	golang.org/x/term v0.47.0
 )
 
 require (
@@ -15,5 +15,5 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
 )
